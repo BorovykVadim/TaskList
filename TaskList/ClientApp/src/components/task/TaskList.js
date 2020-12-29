@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { observer } from 'mobx-react'
+import { observer, inject } from 'mobx-react'
 
 import Task from './Task'
 
-const TaskList = observer(({ aStore, tStore }) => {
+const TaskList = inject('aStore', 'tStore')(observer(({ aStore, tStore }) => {
 
     const pageSize = 15;
     const [page, setPage] = useState(1)
@@ -62,6 +62,6 @@ const TaskList = observer(({ aStore, tStore }) => {
             </div>
         </div>
     )
-})
+}))
 
 export default TaskList

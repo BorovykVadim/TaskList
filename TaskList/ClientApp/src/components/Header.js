@@ -1,12 +1,12 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { observer } from 'mobx-react'
+import { observer, inject } from 'mobx-react'
 
 import Logout from './auth/Logout'
 
 import './App.css'
 
-const Header = observer(({ aStore }) => {
+const Header = inject('aStore')(observer(({aStore}) => {
     const location = useLocation()
 
     const renderButton = () => {
@@ -21,7 +21,7 @@ const Header = observer(({ aStore }) => {
         if (aStore.user) {
             return (
                 <div className="header">
-                    <Logout aStore={aStore} />
+                    <Logout />
                 </div>
             )
         } else {
@@ -36,6 +36,6 @@ const Header = observer(({ aStore }) => {
     return (
         <>{renderLogin()}</>
     )
-})
+}))
 
 export default Header

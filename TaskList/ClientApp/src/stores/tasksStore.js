@@ -38,3 +38,6 @@ export const tasksStore = () => {
         createTask: action.bound
     })
 }
+
+const tStore = tasksStore()
+export default tStore

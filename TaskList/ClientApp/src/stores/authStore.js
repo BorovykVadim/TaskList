@@ -36,3 +36,6 @@ export const authStore = () => {
         signOut: action.bound
     });
 }
+
+const aStore = authStore()
+export default aStore

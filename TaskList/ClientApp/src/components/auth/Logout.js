@@ -1,7 +1,7 @@
 import React from 'react'
-import { observer } from 'mobx-react'
+import { observer, inject } from 'mobx-react'
 
-const Logout = observer(({ aStore }) => {
+const Logout = inject('aStore')(observer(({ aStore }) => {
     const onClickLogoutButton = () => {
         aStore.signOut()
     }
@@ -11,6 +11,6 @@ const Logout = observer(({ aStore }) => {
             Logout
         </button>
     )
-})
+}))
 
 export default Logout

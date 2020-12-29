@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { observer } from 'mobx-react'
+import { observer, inject } from 'mobx-react'
 
 import './Login.css'
 
-const Login = observer(({ aStore }) => {
+const Login = inject('aStore')(observer(({ aStore }) => {
     const [show, setShow] = useState(false)
 
     const [formValues, setFormValues] = useState({
@@ -45,6 +45,6 @@ const Login = observer(({ aStore }) => {
             </form>
         </div>
     )
-})
+}))
 
 export default Login

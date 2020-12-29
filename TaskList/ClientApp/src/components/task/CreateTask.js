@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { observer } from 'mobx-react'
+import { observer, inject } from 'mobx-react'
 
-const CreateTask = observer(({ tStore }) => {
+const CreateTask = inject('tStore')(observer(({ tStore }) => {
     const [name, setName] = useState('')
 
     const onChangeName = e => {
@@ -23,6 +23,6 @@ const CreateTask = observer(({ tStore }) => {
             <button className="submitButton" type="submit">Create Task</button>
         </form>
     )
-})
+}))
 
 export default CreateTask
