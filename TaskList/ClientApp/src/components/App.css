@@ -1,0 +1,31 @@
+.header {
+    text-align: right;
+}
+
+.loginButton {
+    height: 30px;
+    width: 60px;
+    background-color: rgb(40, 40, 165);
+    border: 1px solid rgb(40, 40, 165);
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 5px;
+}
+
+.loginButton:hover {
+    cursor: pointer;
+    background-color: rgb(26, 26, 128);
+}
+
+.loginButton:active {
+    background-color: rgb(14, 14, 73);
+}
+
+button, 
+button:active, 
+button:focus {
+    outline: none;
+}

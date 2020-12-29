@@ -1,0 +1,33 @@
+.field {
+    padding: 2px 0 2px 0
+}
+
+.check {
+    
+}
+
+.submitButton {
+    margin-top: 4px;
+}
+
+.logoutButton {
+    background-color: rgb(252, 111, 111);
+    border: 1px solid rgb(252, 111, 111);
+    color: white;
+    height: 30px;
+    width: 70px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 5px;
+}
+
+.logoutButton:hover {
+    cursor: pointer;
+    background-color: rgb(214, 93, 93);
+}
+
+.logoutButton:active {
+    background-color: rgb(165, 70, 70);
+}

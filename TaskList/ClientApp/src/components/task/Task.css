@@ -1,0 +1,53 @@
+.task {
+    background-color: aliceblue;
+    width: max-content;
+    padding: 2px;
+    margin: 2px;
+    display: flex;
+}
+
+.tasksList {
+    padding-bottom: 10px
+}
+
+.field {
+    padding-right: 20px;
+}
+
+.createButton {
+    height: 30px;
+    width: 60px;
+    background-color: rgb(40, 40, 165);
+    border: 1px solid rgb(40, 40, 165);
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 5px;
+}
+
+.createButton:hover {
+    cursor: pointer;
+    background-color: rgb(26, 26, 128);
+}
+
+.createButton:active {
+    background-color: rgb(14, 14, 73);
+}
+
+.page {
+    background-color: lightgray;
+    width: fit-content;
+    border: 1px solid lightgray;
+    padding: 5px;
+    margin: 10px 5px 0 5px ;
+    border-radius: 6px;
+    font-size: large;
+    font-weight: 700;
+}
+
+.pageBtn:hover {
+    background-color: rgb(175, 175, 175);
+    cursor: pointer;
+}
