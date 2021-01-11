@@ -15,6 +15,7 @@ namespace TaskList.Dependencies
 
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<ITaskService, TaskService>();
+            services.AddScoped<IRabbitMQService, RabbitMQService>();
         }
     }
 }
