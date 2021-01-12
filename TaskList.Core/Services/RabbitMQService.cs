@@ -1,77 +1,127 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using TaskList.Core.Interfaces.Services;
 
 namespace TaskList.Core.Services
 {
     public class RabbitMQService : IRabbitMQService
     {
-        public void Send(int time)
+        private const string QueueName = "new_queue";
+
+        private readonly IConnection _connection;
+        private readonly IModel _channelSender;
+        private static IModel _channelRec;
+        private readonly string _replyQueueName;
+        private readonly EventingBasicConsumer _consumer;
+
+        private readonly ConcurrentDictionary<string, TaskCompletionSource<string>>
+            _callbackMapper = new ConcurrentDictionary<string, TaskCompletionSource<string>>();
+
+        public RabbitMQService()
         {
             var factory = new ConnectionFactory() { HostName = "localhost" };
 
-            using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
+            _connection = factory.CreateConnection();
+            _channelSender = _connection.CreateModel();
+            _replyQueueName = _channelSender.QueueDeclare().QueueName;
 
-            channel.QueueDeclare(queue: "task_queue",
-                                         durable: true,
-                                         exclusive: false,
-                                         autoDelete: false,
-                                         arguments: null);
+            _consumer = new EventingBasicConsumer(_channelSender);
+            _consumer.Received += OnReceivedSender;
+        }
 
-            var body = Encoding.UTF8.GetBytes(time.ToString());
+        public Task<string> Send(string message, CancellationToken cancellationToken = default)
+        {
+            Console.WriteLine(" [x] Sending message");
 
-            var properties = channel.CreateBasicProperties();
-            properties.Persistent = true;
+            var correlationId = Guid.NewGuid().ToString();
+            var tcs = new TaskCompletionSource<string>();
+            _callbackMapper.TryAdd(correlationId, tcs);
 
-            channel.BasicPublish(exchange: "",
-                                 routingKey: "task_queue",
-                                 basicProperties: properties,
-                                 body: body);
+            var props = _channelSender.CreateBasicProperties();
+            props.CorrelationId = correlationId;
+            props.ReplyTo = _replyQueueName;
 
-            Console.WriteLine(" [x] Sent {0}", time);
+            var messageBytes = Encoding.UTF8.GetBytes(message);
+            _channelSender.BasicPublish("", QueueName, props, messageBytes);
+            _channelSender.BasicConsume(consumer: _consumer, queue: _replyQueueName, autoAck: true);
 
-            Console.WriteLine(" Press [enter] to exit.");
+            cancellationToken.Register(() =>
+                _callbackMapper.TryRemove(correlationId, out _));
+            return tcs.Task;
         }
 
         public void Receive()
         {
-            var factory = new ConnectionFactory() { HostName = "localhost" };
+            var factory = new ConnectionFactory()
+            {
+                HostName = "localhost",
+                DispatchConsumersAsync = true
+            };
 
             using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
+            _channelRec = connection.CreateModel();
 
-            channel.QueueDeclare(queue: "task_queue",
-                     durable: true,
-                     exclusive: false,
-                     autoDelete: false,
-                     arguments: null);
+            _channelRec.QueueDeclare(QueueName, false, false, false, null);
+            _channelRec.BasicQos(0, 1, false);
 
-            channel.BasicQos(0, 1, false);
-            Console.WriteLine(" [*] Waiting for messages.");
+            var consumer = new AsyncEventingBasicConsumer(_channelRec);
+            consumer.Received += OnReceivedRec;
 
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += (model, ea) =>
-            {
-                var body = ea.Body.ToArray();
-                int.TryParse(Encoding.UTF8.GetString(body), out int time);
-                Console.WriteLine(" [x] Received {0}", time);
+            _channelRec.BasicConsume(QueueName, false, consumer);
 
-                Thread.Sleep(time * 1000);
-
-                Console.WriteLine(" [x] Done");
-
-                channel.BasicAck(ea.DeliveryTag, false);
-            };
-            channel.BasicConsume(queue: "task_queue",
-                                 autoAck: false,
-                                 consumer: consumer);
-
+            Console.WriteLine(" [x] Awaiting for tasks");
             Console.WriteLine(" Press [enter] to exit.");
             Console.ReadLine();
+        }
+
+        private void OnReceivedSender(object model, BasicDeliverEventArgs ea)
+        {
+            var suchTaskExists = _callbackMapper.TryRemove(ea.BasicProperties.CorrelationId, out var tcs);
+
+            if (!suchTaskExists) return;
+
+            var body = ea.Body.ToArray();
+            var response = Encoding.UTF8.GetString(body);
+
+            tcs.TrySetResult(response);
+
+            Console.WriteLine(" [.] Got '{0}'", response);
+        }
+
+        private static async Task OnReceivedRec(object model, BasicDeliverEventArgs ea)
+        {
+            string response = null;
+
+            var body = ea.Body.ToArray();
+            var props = ea.BasicProperties;
+            var replyProps = _channelRec.CreateBasicProperties();
+            replyProps.CorrelationId = props.CorrelationId;
+
+            try
+            {
+                var message = Encoding.UTF8.GetString(body);
+                var time = int.Parse(message);
+                Thread.Sleep(time * 1000);
+                Console.WriteLine(time);
+                response = "Task complite";
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" [.] " + e.Message);
+                response = "";
+            }
+            finally
+            {
+                var responseBytes = Encoding.UTF8.GetBytes(response);
+
+                _channelRec.BasicPublish("", props.ReplyTo, replyProps, responseBytes);
+                _channelRec.BasicAck(ea.DeliveryTag, false);
+            }
         }
     }
 }

@@ -9,10 +9,12 @@ namespace TaskList.Core.Services
     public class TaskService : ITaskService
     {
         private readonly IRepository repository;
+        private readonly IRabbitMQService rabbitMQService;
 
-        public TaskService(IRepository repository)
+        public TaskService(IRepository repository, IRabbitMQService rabbitMQService)
         {
             this.repository = repository;
+            this.rabbitMQService = rabbitMQService;
         }
 
         public Task CreateTasks(string taskName, int userId)
@@ -42,14 +44,21 @@ namespace TaskList.Core.Services
             return this.repository.Count<Task>();
         }
 
-        public void UpdateTaskStatus(int id, int time)
+        public Task UpdateTaskStatus(int id)
         {
+            Random random = new Random();
+            var time = random.Next(0, 10);
+
+            rabbitMQService.Send(time.ToString()).Wait();
+            
             var task = this.repository.GetById<Task>(id);
 
             task.IsDone = true;
             task.Time = time;
 
             this.repository.Save();
+
+            return task;
         }
     }
 }

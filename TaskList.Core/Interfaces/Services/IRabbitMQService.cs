@@ -1,8 +1,11 @@
-﻿namespace TaskList.Core.Interfaces.Services
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace TaskList.Core.Interfaces.Services
 {
     public interface IRabbitMQService
     {
-        void Send(int time);
+        Task<string> Send(string message, CancellationToken cancellationToken = default);
 
         void Receive();
     }

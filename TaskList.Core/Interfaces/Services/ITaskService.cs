@@ -11,6 +11,6 @@ namespace TaskList.Core.Interfaces.Services
 
         int GetTasksCount();
 
-        void UpdateTaskStatus(int id, int time);
+        Task UpdateTaskStatus(int id);
     }
 }
